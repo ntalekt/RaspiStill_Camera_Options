@@ -1,3 +1,5 @@
+Original project URL : http://www.raspberrypi-spy.co.uk/?p=1862
+
 Script to test different exposure and auto white balance settings using RaspiStill and the Raspberry Pi camera module. This lets you easily find the best settings for your photo setting.
 
 Script will create a directory and name the picture accordingly so you can easily isolate which picture settings were used in the capture.
