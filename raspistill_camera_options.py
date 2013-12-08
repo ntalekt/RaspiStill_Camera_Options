@@ -14,6 +14,7 @@
 # Author : Rick Rocklin
 # Date : 07/12/2013
 # Modified options to match with most recent RaspiStill binary version, added automatic folder creation
+#
 import os
 import time
 import subprocess
