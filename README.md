@@ -5,7 +5,7 @@ A python script that tests multiple exposure and auto white balance settings usi
 Installation
 ------------
 ```
-$ wget https://github.com/ntalekt/RaspiStill_Camera_Options/blob/master/raspistill_camera_options.py
+$ wget https://raw.github.com/ntalekt/RaspiStill_Camera_Options/master/raspistill_camera_options.py
 ```
 
 Rationale
