@@ -38,6 +38,7 @@ Remove the comments from the "list_ex" and "list_awb" of the list you want to us
 # Test list of Exposure and White Balance options. 3 photos.
 list_ex  = ['auto']
 list_awb = ['off','auto','sun']
+```
 
 Usage
 -----
@@ -46,5 +47,6 @@ $ python raspistill_camera_options.py
 
 ```
 
+Original Project
 -----
-Original project URL : [Raspberry Pi Spy](http://www.raspberrypi-spy.co.uk/?p=1862)
+* Original project URL: [Raspberry Pi Spy](http://www.raspberrypi-spy.co.uk/?p=1862)
