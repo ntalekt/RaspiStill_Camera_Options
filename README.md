@@ -44,7 +44,6 @@ Usage
 -----
 ```
 $ python raspistill_camera_options.py
-
 ```
 
 Original Project
