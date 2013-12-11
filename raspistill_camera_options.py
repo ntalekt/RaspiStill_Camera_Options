@@ -14,11 +14,16 @@
 # Author : Rick Rocklin
 # Date : 07/12/2013
 # Modified options to match with most recent RaspiStill binary version, added automatic folder creation
-#
+# Date : 11/12/2013
+# Added fgallery integration to automatically scrape image output and create a preview gallery for easy viewing.
+# Added list menu, and choice to create gallery
 import os
 import time
 import subprocess
 import distutils.core
+import SimpleHTTPServer
+import SocketServer
+import socket
 from datetime import datetime
 
 ## Show menu ##
@@ -117,6 +122,13 @@ try:
    subprocess.call(['./fgallery', folderToSave, folderToSave])  
    viewDirectory = "./view"
    distutils.dir_util.copy_tree(viewDirectory, folderToSave)
+   print "Photos located here: ./" +folderToSave
+   os.chdir(folderToSave)
+   PORT = 8000
+   Handler = SimpleHTTPServer.SimpleHTTPRequestHandler
+   httpd = SocketServer.TCPServer(("", PORT), Handler)
+   print "Point your browser to http://<yourIPaddress>:",PORT
+   httpd.serve_forever()
   else:
    print "Photos located here: ./" +folderToSave     
   
