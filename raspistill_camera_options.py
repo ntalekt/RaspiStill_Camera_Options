@@ -20,20 +20,52 @@ import time
 import subprocess
 import distutils.core
 from datetime import datetime
+
+## Show menu ##
+print (30 * '-')
+print ("   M A I N - M E N U")
+print (30 * '-')
+print ("1. Full list (120 photos)")
+print ("2. Refined list (50 photos)")
+print ("3. Test list (3 photos)")
+print (30 * '-')
+ 
+## Get input ###
+choice = raw_input('Enter your choice [1-3] : ')
+ 
+### Convert string to int type ##
+choice = int(choice)
+yes = set(['yes','y','ye','Y'])
+no = set(['no','n','N'])
+gallerychoice = raw_input('Would you like to create a preview gallery? [y/n] : ') 
+
+### Take action as per selected menu-option ###
+if choice == 1:
+        print ("Starting capture using full list...")
+elif choice == 2:
+        print ("Starting capture using refined list...")
+elif choice == 3:
+        print ("Starting capture using test list...")
+else:    ## default ##
+        print ("Invalid number. Try again...")
+
+if choice == 1:
 # Full list of Exposure and White Balance options. 120 photos
-#list_ex  = ['auto','night','nightpreview','backlight',
-#            'spotlight','sports','snow','beach','verylong',
-#            'fixedfps','antishake','fireworks']
-#list_awb = ['off','auto','sun','cloud','shade','tungsten',
-#            'fluorescent','incandescent','flash','horizon']
+	list_ex  = ['auto','night','nightpreview','backlight',
+            'spotlight','sports','snow','beach','verylong',
+            'fixedfps','antishake','fireworks']
+	list_awb = ['off','auto','sun','cloud','shade','tungsten',
+            'fluorescent','incandescent','flash','horizon']
 
+elif choice == 2:
 # Refined list of Exposure and White Balance options. 50 photos.
-#list_ex  = ['auto','night','backlight','spotlight','fireworks']
-#list_awb = ['off','auto','sun','cloud','shade','tungsten','fluorescent','incandescent','flash','horizon']
+	list_ex  = ['auto','night','backlight','spotlight','fireworks']
+	list_awb = ['off','auto','sun','cloud','shade','tungsten','fluorescent','incandescent','flash','horizon']
 
+else:
 # Test list of Exposure and White Balance options. 3 photos.
-list_ex  = ['auto']
-list_awb = ['off','auto','sun']
+	list_ex  = ['auto']
+	list_awb = ['off','auto','sun']
 
 # EV level
 photo_ev = 0
@@ -68,7 +100,7 @@ os.mkdir(folderToSave)
 # Lets start taking photos!
 try:
 
-  print "Starting photo sequence"
+#  print "Starting photo sequence"
 
   for ex in list_ex:
     for awb in list_awb:
@@ -80,11 +112,13 @@ try:
       time.sleep(photo_interval)
 
   print "Finished photo sequence"
-  print "Starting gallery creation"
-  subprocess.call(['./fgallery', folderToSave, folderToSave])  
-  viewDirectory = "./view"
-  distutils.dir_util.copy_tree(viewDirectory, folderToSave)
-     
+  if gallerychoice in yes:
+   print "Starting gallery creation"
+   subprocess.call(['./fgallery', folderToSave, folderToSave])  
+   viewDirectory = "./view"
+   distutils.dir_util.copy_tree(viewDirectory, folderToSave)
+  else:
+   print "Photos located here: ./" +folderToSave     
   
 
 except KeyboardInterrupt:
