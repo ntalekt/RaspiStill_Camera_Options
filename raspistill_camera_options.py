@@ -18,6 +18,7 @@
 import os
 import time
 import subprocess
+import distutils.core
 from datetime import datetime
 # Full list of Exposure and White Balance options. 120 photos
 #list_ex  = ['auto','night','nightpreview','backlight',
@@ -38,8 +39,8 @@ list_awb = ['off','auto','sun']
 photo_ev = 0
 
 # Photo dimensions and rotation
-photo_width  = 1920
-photo_height = 1080
+photo_width  = 800
+photo_height = 600
 photo_rotate = 0
 
 photo_interval = 0.25 # Interval between photos (seconds)
@@ -64,7 +65,6 @@ initMins = "%02d" % (d.minute)
 # Define the location where you wish to save files. Set to HOME as default.
 folderToSave = "raspistill_options_" + str(initYear) + str(initMonth) + str(initDate) + str(initHour) + str(initMins)
 os.mkdir(folderToSave)
-
 # Lets start taking photos!
 try:
 
@@ -78,9 +78,15 @@ try:
       pid = subprocess.call(cmd, shell=True)
       print ' [' + str(photo_counter) + ' of ' + str(total_photos) + '] ' + filename    
       time.sleep(photo_interval)
-  
+
   print "Finished photo sequence"
+  print "Starting gallery creation"
+  subprocess.call(['./fgallery', folderToSave, folderToSave])  
+  viewDirectory = "./view"
+  distutils.dir_util.copy_tree(viewDirectory, folderToSave)
+     
   
+
 except KeyboardInterrupt:
   # User quit
   print "\nGoodbye!"

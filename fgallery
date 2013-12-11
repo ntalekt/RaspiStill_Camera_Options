@@ -1,0 +1,427 @@
+#!/usr/bin/env perl
+# fgallery: a modern, minimalist javascript photo gallery
+# Copyright(c) 2003-2013 by wave++ "Yuri D'Elia" <wavexx@thregr.org>
+# Distributed under GPL2 (see COPYING) WITHOUT ANY WARRANTY.
+use strict;
+use warnings;
+use v5.14;
+
+use locale;
+use utf8;
+require Encode;
+require encoding;
+
+use Getopt::Long qw{:config bundling};
+use File::Basename qw{fileparse};
+use JSON::PP qw{encode_json};
+use File::Path qw{make_path remove_tree};
+use Date::Parse qw{str2time};
+use File::Glob qw{:globally :nocase};
+
+# defaults
+my $mode = 0644;
+my $slim = 0;
+my $ofile = 0;
+my $orient = 1;
+my $timesort = 1;
+my @exts = ("jpg", "jpeg", "png", "tif", "tiff");
+my $ext = "jpg";
+my @minthumb = (150, 112);
+my @maxthumb = (267, 200);
+my @maxfull = (1600, 1200);
+my $maxq = 100;
+my $imgq = 90;
+my $fullpano = 1;
+my $nodown = 0;
+my $panort = 2.;
+my $facedet = 0;
+my $jpegoptim = 1;
+my $pngoptim = 1;
+my $verbose = 0;
+
+
+# support functions
+sub fatal
+{
+  print(STDERR "error: " . join(" ", @_) . "\n");
+  exit(1);
+}
+
+
+sub sys
+{
+  my @cmd = @_;
+
+  if($verbose) {
+    print(STDERR "+ " . join(" ", @cmd) . "\n")
+  }
+
+  my $fd;
+  unless(open($fd, '-|', @cmd)) {
+    fatal("cannot execute \"$cmd[0]\"");
+  }
+
+  local $/ = undef;
+  my $out = <$fd>;
+
+  unless(close($fd)) {
+    fatal("command \"@cmd\" failed");
+  }
+
+  return split("\n", $out);
+}
+
+
+sub min
+{
+  my ($a, $b) = @_;
+  return ($a < $b? $a: $b);
+}
+
+
+sub max
+{
+  my ($a, $b) = @_;
+  return ($a > $b? $a: $b);
+}
+
+
+sub clamp
+{
+  my ($a, $b, $v) = @_;
+  return ($v < $a? $a: $v > $b? $b: $v);
+}
+
+
+sub get_props
+{
+  my $file = shift;
+  my @cmd = ('identify', '-format',
+	     '%[*]%[exif:*]width=%w\nheight=%h\nformat=%m',
+	     $file);
+  return map { /^([^=]+)=(.*)/ } sys(@cmd);
+}
+
+
+
+# options
+sub parse_wh
+{
+  my ($opt, $spec) = @_;
+  my ($w, $h) = ($spec =~ /^(\d+)x(\d+)$/);
+  unless(defined($w) && defined($h)) {
+    fatal("bad WxH specification in option $opt");
+  }
+  return (int($w), int($h));
+}
+
+
+sub print_help()
+{
+  print(STDERR qq{Usage: $0 [options] input-dir output-dir [album name]
+
+  -h, --help		this help
+  -v			verbose (show commands as being executed)
+  -s			slim output (no original files and downloads)
+  -i			include individual originals
+  -o			do not auto-orient
+  -t			do not time-sort
+  -p			do not automatically include full-sized panoramas
+  -d			do not generate a full album download
+  -f			improve thumbnail cutting by performing face detection
+  --min-thumb WxH	minimum thumbnail size ($minthumb[0]x$minthumb[1])
+  --max-thumb WxH	maximum thumbnail size ($maxthumb[0]x$maxthumb[1])
+  --max-full WxH	maximum full image size ($maxfull[0]x$maxfull[1])
+  --quality Q		preview image quality (0-100, currently: $imgq)
+});
+}
+
+
+# main program
+my $help = 0;
+my $locale = encoding::_get_locale_encoding();
+
+my ($ret, @ARGS) = GetOptions('help|h' => \$help,
+	   'v' => sub { $verbose = 1; },
+	   's' => sub { $slim = 1; },
+	   'i' => sub { $ofile = 1; },
+	   'o' => sub { $orient = 0; },
+	   't' => sub { $timesort = 0; },
+	   'p' => sub { $fullpano = 0; },
+	   'd' => sub { $nodown = 1; },
+	   'f' => sub { $facedet = 1; },
+	   'min-thumb=s' => sub { @minthumb = parse_wh(@_); },
+	   'max-thumb=s' => sub { @maxthumb = parse_wh(@_); },
+	   'max-full=s' => sub { @maxfull = parse_wh(@_); },
+	   'quality=i' => sub { $imgq = $_[1]; });
+
+if(@ARGV < 2 || @ARGV > 3 || $help || !$ret)
+{
+  print_help();
+  exit(2);
+}
+my $dir = $ARGV[0];
+my $out = $ARGV[1];
+my $name = $ARGV[2] || undef;
+
+# check paths
+if(!-d $dir) {
+  fatal("input directory \"$dir\" does not exist");
+} elsif(!-d $out) {
+  fatal("output directory \"$out\" does not exist (should be a template copy)");
+}
+
+# check tools
+if(system("identify >/dev/null 2>&1") || system("convert >/dev/null 2>&1")) {
+  fatal("cannot run \"identify\" or \"convert\" (check if ImageMagick is installed)");
+}
+if(system("zip -h >/dev/null 2>&1")) {
+  fatal("cannot run \"zip\" (check if zip is installed)");
+}
+if(system("jpegoptim -V >/dev/null 2>&1")) {
+  $jpegoptim = 0;
+}
+if(system("pngcrush -h >/dev/null 2>&1")) {
+  $pngoptim = 0;
+}
+if($facedet && system("facedetect -h >/dev/null 2>&1")) {
+  fatal("cannot run \"facedetect\" (see http://www.thregr.org/~wavexx/hacks/facedetect/)");
+}
+
+my $exiftrancmd;
+if($orient)
+{
+  if(!system("exiftran -h >/dev/null 2>&1")) {
+    $exiftrancmd = "exiftran -aip";
+  } elsif(!system("exifautotran >/dev/null 2>&1")) {
+    $exiftrancmd = "exifautotran";
+  } else {
+    fatal("cannot execute exiftran or exifautotran for lossless JPEG autorotation");
+  }
+}
+
+# derived arguments
+my $backblur = int(($minthumb[0] + $minthumb[1]) / 2 * 0.1);
+my @backsize = (int($minthumb[0] * 4), int($minthumb[1] * 3));
+
+# cleanup target paths
+for my $path("$out/thumbs", "$out/blurs", "$out/imgs", "$out/files")
+{
+  remove_tree($path);
+  make_path($path);
+}
+
+# processing
+my @data;
+my $ostamp = 0;
+my $amp = 0;
+my @files = glob("$dir/*.{" . join(",", @exts) . "}");
+for my $i(0 .. $#files)
+{
+  my $file = $files[$i];
+  my $pc = sprintf("%2.0f", $i / @files * 100);
+  my ($base, undef, $suffix) = fileparse(Encode::decode($locale, $file), qr/\.[^.]*$/);
+  $suffix = lc(substr($suffix, 1));
+  print("$pc% $base.$suffix ...\n");
+  my %props = get_props($file);
+
+  # sanitize file name
+  $base =~ s/[^\w]/_/gu;
+  my $root = $base;
+  for(my $c = 0; -f "$out/imgs/$root.$ext"; ++$c) {
+    $root = "${base}_$c";
+  }
+
+  my $fbase = "$root.$ext";
+  my $ffile = "files/$root.$suffix";
+  my $fout = "$out/$ffile";
+  my $fimg = "imgs/$fbase";
+  my $fthumb = "thumbs/$fbase";
+  my $fblur = "blurs/$fbase";
+
+  # copy source file and apply lossless transforms
+  sys('cp', '-p', $file, $fout);
+  if($orient && $props{format} eq "JPEG") {
+    sys("$exiftrancmd $fout 2>/dev/null");
+  }
+  if($jpegoptim && $props{format} eq "JPEG") {
+    sys('jpegoptim', '-q', $fout);
+  } elsif($pngoptim && $props{format} eq "PNG") {
+    sys('pngcrush', '-q', $fout);
+  }
+  chmod($mode, $fout);
+  sys('touch', '-r', $file, $fout);
+
+  # avoid conversion to string
+  my @minthumb = @minthumb;
+  my @maxthumb = @maxthumb;
+  my @backsize = @backsize;
+
+  # generate main image
+  my @sfile = ($props{width}, $props{height});
+  my @simg = sys('convert', $fout,
+		 '-gamma', '0.454545',
+		 '-geometry', "$maxfull[0]x$maxfull[1]>",
+		 '-print', '%w\n%h',
+		 '-gamma', '2.2',
+		 '-fill', 'white',
+		 '-undercolor', '#00000080',
+		 '-gravity', 'South',
+		 '-annotate', '+0+5', "$ffile",
+		 '-quality', $imgq, "$out/$fimg");
+
+  # face/center detection
+  my @center = (0.5, 0.5);
+  if($facedet)
+  {
+    if(my @faces = sys("facedetect", "--best", "--center", "$out/$fimg"))
+    {
+      my @tmp = split(" ", $faces[0]);
+      @center = ($tmp[0] / $simg[0], $tmp[1] / $simg[1]);
+    }
+  }
+
+  # thumbnail size
+  my $thumbrt;
+  if($sfile[0] / $sfile[1] < $minthumb[0] / $minthumb[1]) {
+    $thumbrt = $minthumb[0] / $sfile[0];
+  } else {
+    $thumbrt = $minthumb[1] / $sfile[1];
+  }
+  my @sthumb = (max(int($sfile[0] * $thumbrt + 0.5), $minthumb[0]),
+		max(int($sfile[1] * $thumbrt + 0.5), $minthumb[1]));
+  my @mthumb = (min($maxthumb[0], $sthumb[0]), min($maxthumb[1], $sthumb[1]));
+
+  # cropping window
+  my $dx = $sthumb[0] - $mthumb[0];
+  my $cx = clamp(0, $dx, int($center[0] * $sthumb[0] - $sthumb[0] / 2 + $dx / 2));
+  my $dy = $sthumb[1] - $mthumb[1];
+  my $cy = clamp(0, $dy, int($center[1] * $sthumb[1] - $sthumb[1] / 2 + $dy / 2));
+
+  sys('convert', $fout,
+      '-gamma', '0.454545',
+      '-resize', "$sthumb[0]x$sthumb[1]!",
+      '-gravity', 'NorthWest',
+      '-crop', "$mthumb[0]x$mthumb[1]+$cx+$cy",
+      '-print', '%w\n%h',
+      '-gamma', '2.2',
+      '-fill', 'white',
+      '-undercolor', '#00000080',
+      '-gravity', 'South',
+      '-annotate', '+0+5', "$ffile",
+      '-quality', $imgq, "$out/$fthumb");
+
+  # blur
+  sys('convert', "$out/$fthumb",
+      '-virtual-pixel', 'Mirror',
+      '-gaussian-blur', "0x$backblur",
+      '-scale', "$backsize[0]x$backsize[1]",
+      '-quality', '90', "$out/$fblur");
+
+  # rolling mp average
+  my $mp = ($sfile[0] * $sfile[1] / 1e6);
+  $amp += ($mp - $amp) / (@data + 1);
+
+  my %fdata;
+  $fdata{props} = \%props;
+  $fdata{img} = [$fimg, [map { int } @simg]];
+  $fdata{file} = [$ffile, [map { int } @sfile]];
+  $fdata{blur} = $fblur;
+
+  # do not store duplicate information
+  my @tdata = ($fthumb, [map { int } @mthumb]);
+  if($sthumb[0] != $mthumb[0] || $sthumb[1] != $mthumb[1]) {
+    push(@tdata, [map { int } @sthumb], [map { int } $cx, $cy]);
+  }
+  $fdata{thumb} = \@tdata;
+
+  # truncate some floats
+  $center[0] = int($center[0] * 1000);
+  $center[1] = int($center[1] * 1000);
+  if(abs($center[0] - 500) > 1 || abs($center[0] - 500) > 1) {
+    $fdata{center} = \@center;
+  }
+
+  unless(my $idate = $props{'exif:DateTimeOriginal'} || $props{'exif:DateTime'})
+  {
+    # no date available, cheat by using the previous timestamp
+    $fdata{stamp} = $ostamp = $ostamp + 1;
+  }
+  else
+  {
+    $fdata{date} = $idate;
+    $fdata{stamp} = $ostamp = str2time($idate);
+  }
+
+  push(@data, \%fdata);
+}
+
+if($timesort) {
+  @data = sort { ($a->{stamp} // 0) <=> ($b->{stamp} // 0); } @data;
+}
+
+# generate zip file
+my $fdownload = undef;
+if(!$nodown && !$slim)
+{
+  $fdownload = "files/album.zip";
+  sys('zip', '-q9j', "$out/$fdownload", map { "$out/$_->{'file'}[0]" } @data);
+}
+
+# remove unnecessary raw files
+if(!$ofile || $slim)
+{
+  for my $fdata(@data)
+  {
+    my $file = "$out/$fdata->{'file'}[0]";
+    my $keep = !$slim && $ofile;
+
+    if(!$slim && !$keep && $fullpano)
+    {
+      my ($x, $y) = @{$fdata->{file}[1]};
+      my $mp = ($x * $y / 1e6);
+
+      # try to see if the source file is just a crop of the original
+      my $ox = $fdata->{props}{'exif:PixelXDimension'} // 0;
+      my $oy = $fdata->{props}{'exif:PixelYDimension'} // 0;
+      my $omp = ($ox * $oy / 1e6);
+
+      if($mp >= $omp && $mp > $amp && abs($x / $y) >= $panort) {
+	$keep = 1;
+      }
+    }
+
+    if(!$keep)
+    {
+      unlink($file);
+      delete($fdata->{file});
+    }
+  }
+}
+
+# only attempt to remove the directory (if empty)
+rmdir("$out/files");
+
+# generate json
+my %json;
+$json{name} = $name if($name);
+$json{download} = $fdownload if($fdownload);
+$json{blur} = \@backsize;
+$json{thumb} = { min => \@minthumb, max => \@maxthumb };
+
+foreach my $fdata(@data)
+{
+  my %data;
+  foreach('img', 'thumb', 'file', 'blur', 'date', 'stamp', 'center') {
+    if(defined($fdata->{$_})) {
+      $data{$_} = $fdata->{$_};
+    }
+  }
+  push(@{$json{data}}, \%data);
+}
+
+open(JSON, ">$out/data.json");
+print(JSON encode_json(\%json));
+close(JSON);
+
+print("100% completed\n");
