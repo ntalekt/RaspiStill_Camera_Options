@@ -8,8 +8,6 @@ Rationale
 ---------
 When taking timelapse or general pictures with the Raspberry Pi camera module using RaspiStill you wonder what the best settings would be for a particular photo setting.
 
-This script will take pictures using the different exposure and auto white balance settings to let you easily find the best settings for your photo session. You can quickly run thi$
-
 
 Installation
 ------------
