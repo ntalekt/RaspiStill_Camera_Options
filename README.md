@@ -86,7 +86,7 @@ Point your browser to http://192.168.1.100:8000
 ```
 
 Screenshot of the preview gallery:
-![Gallery preview screenshot](http://ntalekt.com/images/SS_Raspi_fgallery.png)
+![Gallery preview screenshot](http://ntalekt.com/images/preview_fgallery.jpg)
 
 Project credits
 -----
