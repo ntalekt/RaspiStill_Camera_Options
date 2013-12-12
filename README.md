@@ -6,14 +6,9 @@ The script will optionally create a local gallery for easy viewing of the photos
 Installation
 ------------
 
-Download the package:
-```
-$ wget **PLACEHOLDER FOR tar.gz**
-```
-Extract the package:
-```
-$ tar -xzvf PLACEHOLDER FOR tar.gz**
-```
+Download the package: ```$ wget **PLACEHOLDER FOR tar.gz**```
+
+Extract the package: ```$ tar -xzvf PLACEHOLDER FOR tar.gz**```
 
 Dependencies
 ---------
