@@ -267,7 +267,8 @@ for my $i(0 .. $#files)
 		 '-fill', 'white',
 		 '-undercolor', '#00000080',
 		 '-gravity', 'South',
-		 '-annotate', '+0+5', "$ffile",
+		 '-pointsize', '21',
+		 '-annotate', '+0+5', "$fbase",
 		 '-quality', $imgq, "$out/$fimg");
 
   # face/center detection
@@ -308,7 +309,7 @@ for my $i(0 .. $#files)
       '-fill', 'white',
       '-undercolor', '#00000080',
       '-gravity', 'South',
-      '-annotate', '+0+5', "$ffile",
+      '-annotate', '+0+5', "$fbase",
       '-quality', $imgq, "$out/$fthumb");
 
   # blur
