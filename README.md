@@ -7,10 +7,13 @@ Installation
 ------------
 
 Download the package: 
-```$ wget **PLACEHOLDER FOR tar.gz**```
-
+```
+$ wget **PLACEHOLDER FOR tar.gz**
+```
 Extract the package: 
-```$ tar -xzvf PLACEHOLDER FOR tar.gz**```
+```
+$ tar -xzvf PLACEHOLDER FOR tar.gz**
+```
 
 Dependencies
 ---------
