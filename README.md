@@ -56,14 +56,14 @@ $ python raspistill_camera_options.py
 You can use the menu to choose between three different lists each outputs a different amount of test pictures.
 
 * Full list: Outputs 120 test pictures using all available options
-  -Exposure: auto, night, nightpreview, backlight, spotlight, sports, snow, beach, verylong, fixedfps, antishake, fireworks
-  -White balance: off, auto, sun, cloud , shade, tungsten, fluorescent, incandescent, flash, horizon
+  - Exposure: auto, night, nightpreview, backlight, spotlight, sports, snow, beach, verylong, fixedfps, antishake, fireworks
+  - White balance: off, auto, sun, cloud , shade, tungsten, fluorescent, incandescent, flash, horizon
 * Refined list: Outputs 50 pictures using the most used options
-  -Exposure: auto, night, backlight, spotlight, fireworks
-  -White balance: off, auto, sun, cloud, shade, tungsten, fluorescent, incandescent, flash, horizon
+  - Exposure: auto, night, backlight, spotlight, fireworks
+  - White balance: off, auto, sun, cloud, shade, tungsten, fluorescent, incandescent, flash, horizon
 * Test list: Outputs 3 pictures using auto settings
-  -Exposure: auto
-  -White balance: off, auto, sun
+  - Exposure: auto
+  - White balance: off, auto, sun
 
   ```
   ------------------------------
