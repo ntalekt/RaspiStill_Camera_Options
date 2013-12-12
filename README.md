@@ -61,16 +61,17 @@ You can use the menu to choose between three different lists each outputs a diff
 * Full list: Outputs 120 test pictures using all available options
 * Refined list: Outputs 50 pictures using the most used options
 * Test list: Outputs 3 pictures using auto settings
-```
-------------------------------
-   M A I N - M E N U
-------------------------------
-1. Full list (120 photos)
-2. Refined list (50 photos)
-3. Test list (3 photos)
-------------------------------
-Enter your choice [1-3] : 
-```
+
+  ```
+  ------------------------------
+     M A I N - M E N U
+  ------------------------------
+  1. Full list (120 photos)
+  2. Refined list (50 photos)
+  3. Test list (3 photos)
+  ------------------------------
+  Enter your choice [1-3] :
+  ``` 
 
 The script will also optionally create a local preview gallery and host the website for easy preview:
 ```
@@ -81,6 +82,7 @@ Would you like to create a preview gallery? [y/n] :
 Point your browser to http://192.168.1.100:8000
 ```
 
+Screenshot of the preview gallery:
 ![Gallery preview screenshot](http://ntalekt.com/images/SS_Raspi_fgallery.png)
 
 Project credits
