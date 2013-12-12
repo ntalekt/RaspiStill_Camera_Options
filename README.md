@@ -65,7 +65,7 @@ You can use the menu to choose between three different lists each outputs a diff
   - Exposure: auto
   - White balance: off, auto, sun
 
-  ```
+```
   ------------------------------
      M A I N - M E N U
   ------------------------------
@@ -74,7 +74,7 @@ You can use the menu to choose between three different lists each outputs a diff
   3. Test list (3 photos)
   ------------------------------
   Enter your choice [1-3] :
-  ``` 
+``` 
 
 The script will also optionally create a local preview gallery:
 ```
