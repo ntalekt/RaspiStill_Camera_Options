@@ -3,6 +3,14 @@ RaspiStill_Camera_Options
 A python script that tests multiple exposure and auto white balance settings using RaspiStill and the Raspberry Pi camera module. 
 The script will optionally create a local gallery for easy viewing of the photos.
 
+
+Rationale
+---------
+When taking timelapse or general pictures with the Raspberry Pi camera module using RaspiStill you wonder what the best settings would be for a particular photo setting.
+
+This script will take pictures using the different exposure and auto white balance settings to let you easily find the best settings for your photo session. You can quickly run thi$
+
+
 Installation
 ------------
 
@@ -40,12 +48,6 @@ Install all the required dependencies with:
 ```
 sudo apt-get install imagemagick exiftran zip libjson-perl libtimedate-perl
 ```
-
-Rationale
----------
-When taking timelapse or general pictures with the Raspberry Pi camera module using RaspiStill you wonder what the best settings would be for a particular photo setting.
-
-This script will take pictures using the different exposure and auto white balance settings to let you easily find the best settings for your photo session. You can quickly run this script and look through the picture output to decide what the best settings are for a particular photo setting. 
 
 Usage
 -----
