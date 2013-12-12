@@ -23,13 +23,10 @@ Backend:
 
 * ImageMagick (http://www.imagemagick.org)
 * Either:
-
   - ``exiftran`` (part of ``fbida``: http://www.kraxel.org/blog/linux/fbida/), or
   - ``exifautotran`` (part of ``libjpeg-progs``: http://libjpeg.sourceforge.net/).
-
 * zip
 * perl, with the following additional modules:
-
   - JSON::PP (libjson-perl and optionally libjson-xs-perl)
   - Date::Parse (libtimedate-perl)
 
@@ -73,11 +70,11 @@ You can use the menu to choose between three different lists each outputs a diff
   Enter your choice [1-3] :
   ``` 
 
-The script will also optionally create a local preview gallery and host the website for easy preview:
+The script will also optionally create a local preview gallery:
 ```
 Would you like to create a preview gallery? [y/n] :
 ```
-
+Host the gallery using Python SimpleHTTPServer for easy viewing:
 ```
 Point your browser to http://192.168.1.100:8000
 ```
