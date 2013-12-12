@@ -88,4 +88,6 @@ Screenshot of the preview gallery:
 Project credits
 -----
 * Original code source: [Raspberry Pi Spy](http://www.raspberrypi-spy.co.uk/?p=1862)
-* Heavily modified by me.
+  - Heavily modified by me.
+* Preview Gallery: [fgallery](http://www.thregr.org/~wavexx/software/fgallery/)
+  - Modified to suit the needs of the script
